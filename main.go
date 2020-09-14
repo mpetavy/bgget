@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mpetavy/common"
-	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -21,31 +19,6 @@ func init() {
 
 	user = flag.String("u", "", "run as user")
 	directory = flag.String("d", "", "target path")
-}
-
-func FileCopy(src string, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		common.Error(srcFile.Close())
-	}()
-
-	destFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		common.Error(destFile.Close())
-	}()
-
-	_, err = io.Copy(destFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func run() error {
@@ -75,7 +48,7 @@ func run() error {
 		return nil
 	}
 
-	err = FileCopy(srcFile, destFile)
+	err = common.FileCopy(srcFile, destFile)
 	if common.Error(err) {
 		return err
 	}
