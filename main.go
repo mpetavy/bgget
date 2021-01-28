@@ -37,14 +37,7 @@ func run() error {
 
 	destFile := common.CleanPath(filepath.Join(*directory, filepath.Base(srcFile)))
 
-	b, err := common.FileExists(destFile)
-	if common.Error(err) {
-		return err
-	}
-
-	common.Info("Exists: %v", b)
-
-	if b {
+	if common.FileExists(destFile) {
 		return nil
 	}
 
