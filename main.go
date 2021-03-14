@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	common.Init(true, "1.0.0", "", "2019", "gnome background get", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, run, time.Duration(60)*time.Second)
+	common.Init(true, "1.0.0", "", "2019", "gnome background get", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Duration(60)*time.Second)
 
 	user = flag.String("u", "", "run as user")
 	directory = flag.String("d", "", "target path")
