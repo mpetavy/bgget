@@ -1,56 +1,84 @@
 package main
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/base32"
 	"flag"
 	"fmt"
 	"github.com/mpetavy/common"
-	"os/exec"
+	"io"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 )
 
 var (
-	user      *string
-	directory *string
+	srcPath *string
+	dstPath *string
+	timeout *int
 )
 
 func init() {
-	common.Init(true, "1.0.0", "", "", "2019", "gnome background get", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Duration(60)*time.Second)
+	userHomeDir, err := os.UserHomeDir()
+	common.Panic(err)
 
-	user = flag.String("u", "", "run as user")
-	directory = flag.String("d", "", "target path")
+	common.Init(true, "1.0.0", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Hour)
+
+	srcPath = flag.String("src", filepath.Join(userHomeDir, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets"), "directory to store the images")
+	dstPath = flag.String("dst", filepath.Join(userHomeDir, "bgget"), "directory to store the images")
+	timeout = flag.Int("timeout", 3600000, "timeout to look for new images")
+
+	common.Events.NewFuncReceiver(common.EventFlagsParsed{}, func(event common.Event) {
+		common.App().RunTime = common.MillisecondToDuration(*timeout)
+
+		common.Panic(os.MkdirAll(*dstPath, common.DefaultDirMode))
+	})
 }
 
-func run() error {
-	cmd := exec.Command("runuser", "-l", *user, "-c", "gsettings get org.gnome.desktop.background picture-uri")
-
-	ba, err := cmd.Output()
+func processImage(path string) error {
+	fi, err := os.Stat(path)
 	if common.Error(err) {
 		return err
 	}
 
-	srcFile := string(ba)
-	srcFile = srcFile[1 : len(srcFile)-2]
-	srcFile = srcFile[7:]
-
-	common.Info("Found: %v", srcFile)
-
-	destFile := common.CleanPath(filepath.Join(*directory, filepath.Base(srcFile)))
-
-	if common.FileExists(destFile) {
+	if fi.IsDir() {
 		return nil
 	}
 
-	err = common.FileCopy(srcFile, destFile)
+	ba, err := ioutil.ReadFile(path)
 	if common.Error(err) {
 		return err
 	}
 
-	common.Info("Saved: %v", destFile)
+	hash := md5.New()
+	_, err = io.Copy(hash, bytes.NewReader(ba))
+	if common.Error(err) {
+		return err
+	}
 
-	cmd = exec.Command("chown", fmt.Sprintf("%v:%v", *user, *user), destFile)
+	hashStr := base32.StdEncoding.EncodeToString(hash.Sum(nil))
+	filename := filepath.Join(*dstPath, hashStr+".jpg")
 
-	err = cmd.Run()
+	if common.FileExists(filename) {
+		return nil
+	}
+
+	err = os.WriteFile(filename, ba, common.DefaultFileMode)
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
+func run() error {
+	fw := common.NewFilewalker(filepath.Join(*srcPath, "*"), false, false, func(path string) error {
+		return processImage(path)
+	})
+
+	err := fw.Run()
 	if common.Error(err) {
 		return err
 	}
