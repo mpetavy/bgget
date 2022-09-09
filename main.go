@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/mpetavy/common"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -47,7 +46,7 @@ func processImage(path string) error {
 		return nil
 	}
 
-	ba, err := ioutil.ReadFile(path)
+	ba, err := os.ReadFile(path)
 	if common.Error(err) {
 		return err
 	}
