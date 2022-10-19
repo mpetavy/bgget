@@ -73,15 +73,18 @@ func processImage(path string) error {
 }
 
 func run() error {
-	fw := common.NewFilewalker(filepath.Join(*srcPath, "*"), false, false, func(path string, f os.FileInfo) error {
+	fw, err := common.NewFilewalker(filepath.Join(*srcPath, "*"), false, false, func(path string, f os.FileInfo) error {
 		if f.IsDir() {
 			return nil
 		}
 
 		return processImage(path)
 	})
+	if common.Error(err) {
+		return err
+	}
 
-	err := fw.Run()
+	err = fw.Run()
 	if common.Error(err) {
 		return err
 	}
