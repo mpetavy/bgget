@@ -17,25 +17,17 @@ var (
 	inputPath  *string
 	outputPath *string
 	minSize    *int
-	timeout    *int
 )
 
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	common.Panic(err)
 
-	common.Init(true, "1.0.0", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Hour)
+	common.Init("1.0.0", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Hour)
 
 	inputPath = flag.String("i", filepath.Join(userHomeDir, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets"), "directory to store the images")
 	outputPath = flag.String("o", filepath.Join(userHomeDir, "bgget"), "directory to store the images")
 	minSize = flag.Int("s", 1000000, "minimum size of image file")
-	timeout = flag.Int("t", 3600000, "timeout to look for new images")
-
-	common.Events.NewFuncReceiver(common.EventFlagsParsed{}, func(event common.Event) {
-		common.App().RunTime = common.MillisecondToDuration(*timeout)
-
-		common.Panic(os.MkdirAll(*outputPath, common.DefaultDirMode))
-	})
 }
 
 func processImage(path string) error {
@@ -55,6 +47,11 @@ func processImage(path string) error {
 
 	if common.FileExists(filename) {
 		return nil
+	}
+
+	err = os.MkdirAll(*outputPath, common.DefaultDirMode)
+	if common.Error(err) {
+		return err
 	}
 
 	err = os.WriteFile(filename, ba, common.DefaultFileMode)
