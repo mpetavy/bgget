@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	srcPath *string
-	dstPath *string
-	timeout *int
+	inputPath  *string
+	outputPath *string
+	minSize    *int
+	timeout    *int
 )
 
 func init() {
@@ -25,27 +26,19 @@ func init() {
 
 	common.Init(true, "1.0.0", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Hour)
 
-	srcPath = flag.String("src", filepath.Join(userHomeDir, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets"), "directory to store the images")
-	dstPath = flag.String("dst", filepath.Join(userHomeDir, "bgget"), "directory to store the images")
-	timeout = flag.Int("timeout", 3600000, "timeout to look for new images")
+	inputPath = flag.String("i", filepath.Join(userHomeDir, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets"), "directory to store the images")
+	outputPath = flag.String("o", filepath.Join(userHomeDir, "bgget"), "directory to store the images")
+	minSize = flag.Int("s", 1000000, "minimum size of image file")
+	timeout = flag.Int("t", 3600000, "timeout to look for new images")
 
 	common.Events.NewFuncReceiver(common.EventFlagsParsed{}, func(event common.Event) {
 		common.App().RunTime = common.MillisecondToDuration(*timeout)
 
-		common.Panic(os.MkdirAll(*dstPath, common.DefaultDirMode))
+		common.Panic(os.MkdirAll(*outputPath, common.DefaultDirMode))
 	})
 }
 
 func processImage(path string) error {
-	fi, err := os.Stat(path)
-	if common.Error(err) {
-		return err
-	}
-
-	if fi.IsDir() {
-		return nil
-	}
-
 	ba, err := os.ReadFile(path)
 	if common.Error(err) {
 		return err
@@ -58,7 +51,7 @@ func processImage(path string) error {
 	}
 
 	hashStr := base32.StdEncoding.EncodeToString(hash.Sum(nil))
-	filename := filepath.Join(*dstPath, hashStr+".jpg")
+	filename := filepath.Join(*outputPath, hashStr+".jpg")
 
 	if common.FileExists(filename) {
 		return nil
@@ -73,8 +66,8 @@ func processImage(path string) error {
 }
 
 func run() error {
-	fw, err := common.NewFilewalker(filepath.Join(*srcPath, "*"), false, false, func(path string, f os.FileInfo) error {
-		if f.IsDir() {
+	fw, err := common.NewFilewalker(filepath.Join(*inputPath, "*"), false, false, func(path string, f os.FileInfo) error {
+		if f.IsDir() || int(f.Size()) < *minSize {
 			return nil
 		}
 
