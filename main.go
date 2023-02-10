@@ -14,20 +14,20 @@ import (
 )
 
 var (
-	inputPath  *string
-	outputPath *string
-	minSize    *int
+	user       = flag.String("u", "", "user of which images shall be taken")
+	inputPath  = flag.String("i", "", "directory to store the images")
+	outputPath = flag.String("o", "", "directory to store the images")
+	minSize    = flag.Int("s", 1000000, "minimum size of image file")
 )
 
 func init() {
-	userHomeDir, err := os.UserHomeDir()
-	common.Panic(err)
-
 	common.Init("1.0.0", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Minute*5)
 
-	inputPath = flag.String("i", filepath.Join(userHomeDir, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets"), "directory to store the images")
-	outputPath = flag.String("o", filepath.Join(userHomeDir, "bgget"), "directory to store the images")
-	minSize = flag.Int("s", 1000000, "minimum size of image file")
+	common.Events.NewFuncReceiver(common.EventFlagsParsed{}, func(event common.Event) {
+		if *inputPath == "" {
+			*inputPath = filepath.Join(*user, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets")
+		}
+	})
 }
 
 func processImage(path string) error {
@@ -85,5 +85,5 @@ func run() error {
 func main() {
 	defer common.Done()
 
-	common.Run(nil)
+	common.Run([]string{"u", "o"})
 }
