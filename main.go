@@ -23,9 +23,13 @@ var (
 func init() {
 	common.Init("1.0.0", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Minute*5)
 
+	if !common.IsWindowsOS() {
+		common.Panic(fmt.Errorf("Runs only on Windows"))
+	}
+
 	common.Events.NewFuncReceiver(common.EventFlagsParsed{}, func(event common.Event) {
 		if *inputPath == "" {
-			*inputPath = filepath.Join(*user, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets")
+			*inputPath = filepath.Join("c:"+string(os.PathSeparator), "users", *user, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets")
 		}
 	})
 }
@@ -83,7 +87,5 @@ func run() error {
 }
 
 func main() {
-	defer common.Done()
-
 	common.Run([]string{"u", "o"})
 }
