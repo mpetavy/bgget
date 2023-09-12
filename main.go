@@ -23,7 +23,7 @@ var (
 func init() {
 	common.Init("bgget", "", "", "", "2022", "Windows background image getter", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, time.Minute*5)
 
-	if !common.IsWindowsOS() {
+	if !common.IsWindows() {
 		common.Panic(fmt.Errorf("Runs only on Windows"))
 	}
 
