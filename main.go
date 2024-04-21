@@ -16,7 +16,7 @@ import (
 
 var (
 	user       = flag.String("u", "", "user of which images shall be taken")
-	inputPath  = flag.String("i", "", "directory to store the images")
+	inputPath  = flag.String("i", "", "directory to read the images")
 	outputPath = flag.String("o", "", "directory to store the images")
 	minSize    = flag.Int("s", 1000000, "minimum size of image file")
 )
