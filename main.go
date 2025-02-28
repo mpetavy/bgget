@@ -31,7 +31,7 @@ func init() {
 		common.Panic(fmt.Errorf("Runs only on Windows"))
 	}
 
-	common.Events.AddListener(common.EventFlagsParsed{}, func(event common.Event) {
+	common.Events.AddListener(common.EventFlags{}, func(event common.Event) {
 		if *inputPath == "" {
 			*inputPath = filepath.Join("c:"+string(os.PathSeparator), "users", *user, "AppData", "Local", "Packages", "Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy", "LocalState", "Assets")
 		}
